@@ -85,7 +85,7 @@ const G = (function (){
 	}
 	const playNote = function(kbd_key){
 		if(kbd_key in kbd_notes){
-			PS.audioPlay(kbd_notes[kbd_key]);
+			PS.audioPlay(kbd_notes[kbd_key], {volume:.3});
 		}
 	}
 
@@ -163,10 +163,7 @@ PS.init = function( system, options ) {
 	// your game title or a welcome message
 	// in the status line above the grid.
 	// Uncomment the following code line and
-	// change the string parameter as needed.
-
-	// PS.statusText( "Game" );
-
+	// change the string parameter as needed.audioPlay
 	// Add any other initialization code you need here.
 };
 
@@ -191,7 +188,7 @@ PS.touch = function( x, y, data, options ) {
 	}else if((x === 14) && (y === 4)){
 		G.octaveDown();
 	}else if(y === 4){
-		PS.audioPlay(G.getNote(x));
+		PS.audioPlay(G.getNote(x), {volume:.3});
 		G.assignNote(x);
 	}else if(x > 2 && x < 12){
 		G.select(x,y);
