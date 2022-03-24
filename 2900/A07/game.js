@@ -115,6 +115,8 @@ PS.init = function( system, options ) {
 
 	PS.gridSize( 15, 5 );
 
+	PS.statusText("Cacophony");
+
 	PS.border(PS.ALL, 4, {top:5,left:0,right:0,bottom:5});
 
 	PS.borderColor(0,4,G.note_colors[0]);
