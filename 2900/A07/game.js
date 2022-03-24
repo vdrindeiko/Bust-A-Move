@@ -48,6 +48,55 @@ Any value returned is ignored.
 [options : Object] = A JavaScript object with optional data properties; see API documentation for details.
 */
 
+const G = (function (){
+	const note_colors = [0xff0000, 0xff8000, 0xffff00,
+		                 0x80ff00, 0x00ff00, 0x00ff80,
+						 0x00ffff, 0x0080ff, 0x0000ff,
+						 0x8000ff, 0xff00ff, 0xff0080];
+	let octave = 3;
+	const octaveUp = function(){
+		if(octave < 7) octave++;
+		PS.glyph(12, 4, octave.toString());
+	}
+	const octaveDown = function(){
+		if(octave > 1) octave--;
+		PS.glyph(12, 4, octave.toString());
+	}
+	const getNote = function(key){
+		return PS.piano(4 + key + (octave-1)*12);
+	}
+
+	let selected = [0,0];
+	const select = function(x,y){
+		PS.border(selected[0],selected[1],1);
+		selected = [x,y];
+		PS.border(selected[0],selected[1],4);
+	}
+	
+	const kbd = [[49, 50, 51, 52, 53, 54, 55, 56, 57],
+	             [113, 119, 101, 114, 116, 121, 117, 105, 111],
+				 [97, 115, 100, 102, 103, 104, 106, 107, 108],
+				 [122, 120, 99, 118, 98, 110, 109, 44, 46]];
+	let kbd_notes = {};
+	const assignNote = function(piano_key){
+		PS.color(selected[0],selected[1], note_colors[piano_key]);
+		const kbd_key = kbd[selected[1]][selected[0]-3];
+		kbd_notes[kbd_key] = getNote(piano_key);
+	}
+	const playNote = function(kbd_key){
+		if(kbd_key in kbd_notes){
+			PS.audioPlay(kbd_notes[kbd_key]);
+		}
+	}
+
+	return {
+		note_colors,
+		octaveUp, octaveDown, getNote,
+		select,
+		kbd, assignNote, playNote
+	}
+}())
+
 PS.init = function( system, options ) {
 	// Uncomment the following code line
 	// to verify operation:
@@ -64,7 +113,51 @@ PS.init = function( system, options ) {
 	// Uncomment the following code line and change
 	// the x and y parameters as needed.
 
-	// PS.gridSize( 8, 8 );
+	PS.gridSize( 15, 5 );
+
+	PS.border(PS.ALL, 4, {top:5,left:0,right:0,bottom:5});
+
+	PS.borderColor(0,4,G.note_colors[0]);
+	PS.borderColor(1,4,G.note_colors[1]);
+	PS.borderColor(2,4,G.note_colors[2]);
+	PS.borderColor(3,4,G.note_colors[3]);
+	PS.borderColor(4,4,G.note_colors[4]);
+	PS.borderColor(5,4,G.note_colors[5]);
+	PS.borderColor(6,4,G.note_colors[6]);
+	PS.borderColor(7,4,G.note_colors[7]);
+	PS.borderColor(8,4,G.note_colors[8]);
+	PS.borderColor(9,4,G.note_colors[9]);
+	PS.borderColor(10,4,G.note_colors[10]);
+	PS.borderColor(11,4,G.note_colors[11]);
+
+	PS.color(0, PS.ALL, PS.COLOR_GRAY);
+	PS.color(1, PS.ALL, PS.COLOR_GRAY);
+	PS.color(2, PS.ALL, PS.COLOR_GRAY);
+	PS.color(12, PS.ALL, PS.COLOR_GRAY);
+	PS.color(13, PS.ALL, PS.COLOR_GRAY);
+	PS.color(14, PS.ALL, PS.COLOR_GRAY);
+
+	PS.color(0,4,PS.COLOR_WHITE);
+	PS.color(1,4,PS.COLOR_BLACK);
+	PS.color(2,4,PS.COLOR_WHITE);
+	PS.color(3,4,PS.COLOR_BLACK);
+	PS.color(6,4,PS.COLOR_BLACK);
+	PS.color(8,4,PS.COLOR_BLACK);
+	PS.color(10,4,PS.COLOR_BLACK);
+	PS.color(12,4,PS.COLOR_WHITE);
+	PS.color(13,4,PS.COLOR_WHITE);
+	PS.color(14,4,PS.COLOR_WHITE);
+
+	for(let i = 0; i < 4; i++){
+		for(let j = 0; j < 9; j++){
+			PS.glyph(3+j, i, G.kbd[i][j]);
+		}
+	}
+
+	G.octaveUp();
+
+	PS.glyph(13, 4, 0x25b2);
+	PS.glyph(14, 4, 0x25bc);
 
 	// This is also a good place to display
 	// your game title or a welcome message
@@ -92,6 +185,17 @@ PS.touch = function( x, y, data, options ) {
 	// to inspect x/y parameters:
 
 	// PS.debug( "PS.touch() @ " + x + ", " + y + "\n" );
+
+	if((x === 13) && (y === 4)){
+		G.octaveUp();
+	}else if((x === 14) && (y === 4)){
+		G.octaveDown();
+	}else if(y === 4){
+		PS.audioPlay(G.getNote(x));
+		G.assignNote(x);
+	}else if(x > 2 && x < 12){
+		G.select(x,y);
+	}
 
 	// Add code here for mouse clicks/touches
 	// over a bead.
@@ -180,6 +284,8 @@ PS.keyDown = function( key, shift, ctrl, options ) {
 	// Uncomment the following code line to inspect first three parameters:
 
 	// PS.debug( "PS.keyDown(): key=" + key + ", shift=" + shift + ", ctrl=" + ctrl + "\n" );
+
+	G.playNote(key);
 
 	// Add code here for when a key is pressed.
 };
