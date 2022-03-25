@@ -48,11 +48,18 @@ Any value returned is ignored.
 [options : Object] = A JavaScript object with optional data properties; see API documentation for details.
 */
 
+//
 const G = (function (){
+
+	// Set array of colors used for labelling the piano keys (12 color wheel)
 	const note_colors = [0xff0000, 0xff8000, 0xffff00,
 		                 0x80ff00, 0x00ff00, 0x00ff80,
 						 0x00ffff, 0x0080ff, 0x0000ff,
 						 0x8000ff, 0xff00ff, 0xff0080];
+
+	// Octave starts at base of 3
+	// Functions called to increase and decrease the octave within the range of 1-7
+	// The glyph identifying the octave updates as well
 	let octave = 3;
 	const octaveUp = function(){
 		if(octave < 7) octave++;
@@ -62,27 +69,36 @@ const G = (function (){
 		if(octave > 1) octave--;
 		PS.glyph(12, 4, octave.toString());
 	}
+
+	// Given a key, returns the piano sound calculated from the key value and octave
 	const getNote = function(key){
 		return PS.piano(4 + key + (octave-1)*12);
 	}
 
+	// Applies a border to the given selected cell
 	let selected = [0,0];
 	const select = function(x,y){
 		PS.border(selected[0],selected[1],1);
 		selected = [x,y];
 		PS.border(selected[0],selected[1],4);
 	}
-	
+
+	// Ascii for computer keyboard inputs, in order of their placement on the keyboard.
 	const kbd = [[49, 50, 51, 52, 53, 54, 55, 56, 57],
 	             [113, 119, 101, 114, 116, 121, 117, 105, 111],
 				 [97, 115, 100, 102, 103, 104, 106, 107, 108],
 				 [122, 120, 99, 118, 98, 110, 109, 44, 46]];
+
+	// Given the piano key, assigns the correlating note to the previously selected computer keyboard cell
+	// Also colors the selected cell the same color as the given piano key
 	let kbd_notes = {};
 	const assignNote = function(piano_key){
 		PS.color(selected[0],selected[1], note_colors[piano_key]);
 		const kbd_key = kbd[selected[1]][selected[0]-3];
 		kbd_notes[kbd_key] = getNote(piano_key);
 	}
+
+	// Given the computer keyboard cell, plays the piano note assigned to it
 	const playNote = function(kbd_key){
 		if(kbd_key in kbd_notes){
 			PS.audioPlay(kbd_notes[kbd_key], {volume:.3});
@@ -117,8 +133,8 @@ PS.init = function( system, options ) {
 
 	PS.statusText("Cacophony");
 
+	// Assigning the 12 colors to the top and bottom borders of the piano keys
 	PS.border(PS.ALL, 4, {top:5,left:0,right:0,bottom:5});
-
 	PS.borderColor(0,4,G.note_colors[0]);
 	PS.borderColor(1,4,G.note_colors[1]);
 	PS.borderColor(2,4,G.note_colors[2]);
@@ -132,6 +148,7 @@ PS.init = function( system, options ) {
 	PS.borderColor(10,4,G.note_colors[10]);
 	PS.borderColor(11,4,G.note_colors[11]);
 
+	// Filling in unused cells with gray
 	PS.color(0, PS.ALL, PS.COLOR_GRAY);
 	PS.color(1, PS.ALL, PS.COLOR_GRAY);
 	PS.color(2, PS.ALL, PS.COLOR_GRAY);
@@ -150,6 +167,7 @@ PS.init = function( system, options ) {
 	PS.color(13,4,PS.COLOR_WHITE);
 	PS.color(14,4,PS.COLOR_WHITE);
 
+	// Pulls the ascii values from the kbd array and assigns the corresponding glyphs to each keyboard cell
 	for(let i = 0; i < 4; i++){
 		for(let j = 0; j < 9; j++){
 			PS.glyph(3+j, i, G.kbd[i][j]);
@@ -185,6 +203,9 @@ PS.touch = function( x, y, data, options ) {
 
 	// PS.debug( "PS.touch() @ " + x + ", " + y + "\n" );
 
+	// Increases/decreases if the up/down arrow cells are clicked
+	// Plays the piano key when clicked and assigns the note to a selected keyboard key
+	// Selects and highlights cell when a computer keyboard key is clicked
 	if((x === 13) && (y === 4)){
 		G.octaveUp();
 	}else if((x === 14) && (y === 4)){
