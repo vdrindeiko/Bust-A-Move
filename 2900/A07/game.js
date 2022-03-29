@@ -38,17 +38,7 @@ If you don't use JSHint (or are using it with a configuration file), you can saf
 
 "use strict"; // Do NOT remove this directive!
 
-/*
-PS.init( system, options )
-Called once after engine is initialized but before event-polling begins.
-This function doesn't have to do anything, although initializing the grid dimensions with PS.gridSize() is recommended.
-If PS.grid() is not called, the default grid dimensions (8 x 8 beads) are applied.
-Any value returned is ignored.
-[system : Object] = A JavaScript object containing engine and host platform information properties; see API documentation for details.
-[options : Object] = A JavaScript object with optional data properties; see API documentation for details.
-*/
-
-//
+// Game namespace
 const G = (function (){
 
 	// Set array of colors used for labelling the piano keys (12 color wheel)
@@ -75,7 +65,9 @@ const G = (function (){
 		return PS.piano(4 + key + (octave-1)*12);
 	}
 
-	// Applies a border to the given selected cell
+	// Applies a border to the given selected cell and marks it as selected, so 
+	// the user can see which cell is selected, and calls to assignNote know which
+	// key to assign the note to.
 	let selected = [0,0];
 	const select = function(x,y){
 		PS.border(selected[0],selected[1],1);
@@ -88,10 +80,13 @@ const G = (function (){
 	             [113, 119, 101, 114, 116, 121, 117, 105, 111],
 				 [97, 115, 100, 102, 103, 104, 106, 107, 108],
 				 [122, 120, 99, 118, 98, 110, 109, 44, 46]];
+	
+	// Object used to associate piano notes with keys on the keyboard. This is filled in and used by assignNote 
+	// and playNote.
+	let kbd_notes = {};
 
 	// Given the piano key, assigns the correlating note to the previously selected computer keyboard cell
 	// Also colors the selected cell the same color as the given piano key
-	let kbd_notes = {};
 	const assignNote = function(piano_key){
 		PS.color(selected[0],selected[1], note_colors[piano_key]);
 		const kbd_key = kbd[selected[1]][selected[0]-3];
@@ -112,6 +107,16 @@ const G = (function (){
 		kbd, assignNote, playNote
 	}
 }())
+
+/*
+PS.init( system, options )
+Called once after engine is initialized but before event-polling begins.
+This function doesn't have to do anything, although initializing the grid dimensions with PS.gridSize() is recommended.
+If PS.grid() is not called, the default grid dimensions (8 x 8 beads) are applied.
+Any value returned is ignored.
+[system : Object] = A JavaScript object containing engine and host platform information properties; see API documentation for details.
+[options : Object] = A JavaScript object with optional data properties; see API documentation for details.
+*/
 
 PS.init = function( system, options ) {
 	// Uncomment the following code line
@@ -156,6 +161,7 @@ PS.init = function( system, options ) {
 	PS.color(13, PS.ALL, PS.COLOR_GRAY);
 	PS.color(14, PS.ALL, PS.COLOR_GRAY);
 
+	// Creating the colors of the piano keys
 	PS.color(0,4,PS.COLOR_WHITE);
 	PS.color(1,4,PS.COLOR_BLACK);
 	PS.color(2,4,PS.COLOR_WHITE);
@@ -174,8 +180,10 @@ PS.init = function( system, options ) {
 		}
 	}
 
+	// Called so that the current octave is shown on startup
 	G.octaveUp();
 
+	// Up and down arrows
 	PS.glyph(13, 4, 0x25b2);
 	PS.glyph(14, 4, 0x25bc);
 
