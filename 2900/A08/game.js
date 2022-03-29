@@ -54,10 +54,12 @@ const G = (function (){
 	const octaveUp = function(){
 		if(octave < 7) octave++;
 		PS.glyph(12, 4, octave.toString());
+		PS.audioPlay("fx_click");
 	}
 	const octaveDown = function(){
 		if(octave > 1) octave--;
 		PS.glyph(12, 4, octave.toString());
+		PS.audioPlay("fx_click");
 	}
 
 	// Given a key, returns the piano sound calculated from the key value and octave
