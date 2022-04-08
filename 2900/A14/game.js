@@ -204,6 +204,7 @@ const G = (function(){
 	]
 	let curr_level = 1;
 	const level_max = levels[levels.length-1].num;
+	let level_complete = false;
 
 	const ice_color = 0xaaddff;
 	const ice_border = 0x77bbff;
@@ -224,7 +225,9 @@ const G = (function(){
 			this.trySetDirection = this.trySetDirection.bind(this);
 			this.collide = this.collide.bind(this);
 			this.move = this.move.bind(this);
-			PS.spritePlane(this.sprite, 3);
+			this.attach = this.attach.bind(this);
+			this.detach = this.detach.bind(this);
+			PS.spritePlane(this.sprite, 4);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, player_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
@@ -242,8 +245,9 @@ const G = (function(){
 				if(s1 === goal.sprite || s2 === goal.sprite){ //level complete
 					this.direction[0] = 0;
 					this.direction[1] = 0;
-					curr_level++;
-					loadLevel(curr_level);
+					level_complete = true;
+					//curr_level++;
+					//loadLevel(curr_level);
 				}else{ //hit wall
 					//move back before collision, then set direction to 0,0
 					PS.spriteMove(this.sprite,
@@ -278,7 +282,9 @@ const G = (function(){
 				return;
 			}
 			
-			PS.spriteMove(this.sprite, 
+			PS
+			.spriteMove(
+				this.sprite, 
 				curr_x+this.direction[0], 
 				curr_y+this.direction[1]);
 			if(this.attached !== undefined){
@@ -295,7 +301,7 @@ const G = (function(){
 		//sets info about this goal's sprite, including the given position
 		init: function(x,y){
 			this.sprite = PS.spriteSolid(1,1);
-			PS.spritePlane(this.sprite, 2);
+			PS.spritePlane(this.sprite, 3);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, goal_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
@@ -320,16 +326,17 @@ const G = (function(){
 		constructor(x, y){
 			this.type = "Breakable";
 			this.sprite = PS.spriteSolid(1, 1);
+			this.collide = this.collide.bind(this);
 			PS.spritePlane(this.sprite, 2);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, breakable_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
-			PS.spriteCollide(this.sprite, this.collide.bind(this));
+			PS.spriteCollide(this.sprite, this.collide);
 		}
 		collide(s1, p1, s2, p2, type){
 			if((type === PS.SPRITE_OVERLAP) && (s1 === player.sprite || s2 === player.sprite)){
-				PS.debug("breakable break\n");
-				PS.spriteDelete(this.sprite);
+				markDelete(this.sprite);
+				breakables.splice(breakables.indexOf(this), 1);
 			}
 		}
 	};
@@ -456,7 +463,21 @@ const G = (function(){
 		}
 	}
 
+	let delete_marks = [];
+	const markDelete = function(sprite){
+		if(!delete_marks.includes(sprite)){
+			delete_marks.push(sprite);
+		}
+	}
+
 	const update = function(){
+		if(level_complete){
+			curr_level++;
+			loadLevel(curr_level);
+			level_complete = false;
+		}
+		delete_marks.forEach(ele => PS.spriteDelete(ele));
+		delete_marks = [];
 		player.move();
 	}
 
@@ -480,7 +501,7 @@ PS.init = function( system, options ) {
 	// Load levels
 	G.loadLevel(1);
 
-	PS.timerStart(6,G.update);
+	PS.timerStart(4,G.update);
 };
 
 /*
