@@ -47,14 +47,14 @@ const G = (function(){
 			width: 8,
 			layout: 
 			[
+				[3,3,0,0,0,0,3,3],
+				[3,0,0,0,0,0,0,3],
+				[0,0,3,0,0,3,0,0],
 				[0,0,0,0,0,0,0,0],
-				[0,0,4,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0],
-				[0,3,0,1,0,0,0,0],
-				[0,0,0,0,0,0,0,0],
-				[0,0,5,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,2]
+				[0,0,0,3,3,0,0,0],
+				[0,0,3,0,0,3,0,0],
+				[3,0,0,0,0,0,0,3],
+				[3,3,0,0,0,0,3,3]
 			]
 		},
 		{
@@ -200,6 +200,38 @@ const G = (function(){
 				[0,0,0,0,0,3,0,0],
 				[0,0,3,0,0,3,0,0]
 			]
+		},
+		{
+			num: 10,
+			height: 8,
+			width: 8,
+			layout:
+			[
+				[3,3,0,1,0,0,3,3],
+				[3,0,0,0,0,0,0,3],
+				[0,0,4,0,0,4,0,0],
+				[0,0,0,0,0,0,0,0],
+				[0,0,4,0,0,4,0,0],
+				[0,0,0,4,4,0,0,0],
+				[3,0,0,0,0,0,0,3],
+				[3,3,0,0,0,0,3,3]
+			]
+		},
+		{
+			num: 11,
+			height: 8,
+			width: 8,
+			layout: 
+			[
+				[3,3,0,0,0,0,3,3],
+				[3,0,0,0,0,0,0,3],
+				[0,0,3,0,0,3,0,0],
+				[0,0,0,0,0,0,0,0],
+				[0,0,0,3,3,0,0,0],
+				[0,0,3,0,0,3,0,0],
+				[3,0,0,0,0,0,0,3],
+				[3,3,0,0,0,0,3,3]
+			]
 		}
 	]
 	let curr_level = 1;
@@ -338,6 +370,11 @@ const G = (function(){
 				markDelete(this.sprite);
 				breakables.splice(breakables.indexOf(this), 1);
 			}
+			if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
+				if(breakables.length === 0){//all breakable blocks are gone
+					level_complete = true;//go to sad face screen
+				}
+			}
 		}
 	};
 	let breakables = [];
@@ -393,17 +430,19 @@ const G = (function(){
 	//loads the given level
 	const loadLevel = function(num){
 		//check if level is above the max level, if it is, display win screen and skip changing level
-		if(num > level_max){
-			PS.statusText("You win!");
-			return;
-		}
+		// if(num > level_max){
+		// 	PS.statusText("You win!");
+		// 	return;
+		// }
 
 		//delete sprites
 		if(player.sprite !== undefined){
 			PS.spriteDelete(player.sprite);
+			player.sprite = undefined;
 		}
 		if(goal.sprite !== undefined){
 			PS.spriteDelete(goal.sprite);
+			goal.sprite = undefined;
 		}
 		walls.forEach(ele => PS.spriteDelete(ele.sprite));
 		walls = [];
@@ -418,9 +457,13 @@ const G = (function(){
 		PS.gridSize(level.width, level.height);
 		
 		//set background colors
-		PS.gridPlane(0);
-		PS.color(PS.ALL, PS.ALL, ice_color);
-		PS.borderColor(PS.ALL, PS.ALL, ice_border);
+		if(num !== level_max){//don't change bg color on sad face map
+			PS.gridPlane(0);
+			PS.color(PS.ALL, PS.ALL, ice_color);
+			PS.borderColor(PS.ALL, PS.ALL, ice_border);
+		}else{
+			PS.border(PS.ALL, PS.ALL, 0);
+		}
 		
 		//place obstacles, player, and goal
 		for(let row = 0; row < level.height; row++){
@@ -434,6 +477,12 @@ const G = (function(){
 		switch(num){
 			case 1:
 				msg += ": Arrow keys to move, R to reset";
+				break;
+			case level_max-1: //Win screen
+				msg = "You win!"
+				break;
+			case level_max: //Sad face
+				msg = "";
 				break;
 		}
 		PS.statusText(msg);
@@ -471,14 +520,14 @@ const G = (function(){
 	}
 
 	const update = function(){
+		delete_marks.forEach(ele => PS.spriteDelete(ele));
+		delete_marks = [];
 		if(level_complete){
 			curr_level++;
 			loadLevel(curr_level);
 			level_complete = false;
 		}
-		delete_marks.forEach(ele => PS.spriteDelete(ele));
-		delete_marks = [];
-		player.move();
+		if(player.sprite !== undefined) player.move();
 	}
 
 	return {
