@@ -254,6 +254,16 @@ const G = (function(){
 	const wall_plane = 3;
 	const breakable_plane = 4;
 
+	let audio_breaks = [];
+	let audio_hits = [];
+	let audio_level_complete = "";
+	let audio_sad_face = "";
+	let audio_reset = "";
+
+	const playRandom = function(sounds){
+		PS.audioPlayChannel(sounds[PS.random(sounds.length)-1]);
+	}
+
 	//the current player sprite
 	let player = {
 		direction: [0,0],
@@ -303,6 +313,9 @@ const G = (function(){
 							markDelete(breakable);
 							const to_delete = breakables.filter(ele => ele.sprite === breakable)[0];
 							breakables.splice(breakables.indexOf(to_delete), 1);
+							playRandom(audio_breaks);
+						}else{
+							playRandom(audio_hits);
 						}
 
 						if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
@@ -310,6 +323,8 @@ const G = (function(){
 								level_complete = true;//go to sad face screen
 							}
 						}
+					}else{
+						playRandom(audio_hits);
 					}
 
 					//move back before collision, then set direction to 0,0
@@ -335,6 +350,7 @@ const G = (function(){
 			   (this.direction[1] === 1 && curr_y === PS.gridSize().height-1)){
 				this.direction[0] = 0;
 				this.direction[1] = 0;
+				this.can_break = false;
 				return;
 			}
 			
@@ -384,27 +400,12 @@ const G = (function(){
 		constructor(x, y){
 			this.type = "Breakable";
 			this.sprite = PS.spriteSolid(1, 1);
-			this.collide = this.collide.bind(this);
 			PS.spritePlane(this.sprite, breakable_plane);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, breakable_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
-			PS.spriteCollide(this.sprite, this.collide);
 		}
-		collide(s1, p1, s2, p2, type){
-			// if((type === PS.SPRITE_OVERLAP) && (s1 === player.sprite || s2 === player.sprite)){
-			// 	if(player.canBreak){//player has moved >=1 space
-			// 		markDelete(this.sprite);
-			// 		breakables.splice(breakables.indexOf(this), 1);
-			// 	}
-			// }
-			// if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
-			// 	if(breakables.length === 0){//all breakable blocks are gone
-			// 		level_complete = true;//go to sad face screen
-			// 	}
-			// }
-		}
-	};
+	}
 	let breakables = [];
 
 	/*
@@ -443,7 +444,7 @@ const G = (function(){
 	}
 
 	//loads the given level
-	const loadLevel = function(num){
+	const loadLevel = function(num, reset=false){
 		//check if level is above the max level, if it is, display win screen and skip changing level
 		// if(num > level_max){
 		// 	PS.statusText("You win!");
@@ -497,6 +498,14 @@ const G = (function(){
 		}
 		PS.statusText(msg);
 		PS.statusColor(0xffffff);
+		
+		if(num === level_max){
+			if(!reset) PS.audioPlayChannel(audio_sad_face);
+		}else if(reset){
+			PS.audioPlayChannel(audio_reset);
+		}else{
+			PS.audioPlayChannel(audio_level_complete);
+		}
 	}
 
 	let delete_marks = [];
@@ -524,7 +533,7 @@ const G = (function(){
 				break;
 			case 114://r to reset level
 				player.direction = [0,0];
-				loadLevel(curr_level);
+				loadLevel(curr_level, true);
 				success = true;
 		}
 		return success;
@@ -544,6 +553,49 @@ const G = (function(){
 		}
 	}
 
+	const loadAudio = function(){
+		PS.audioLoad("break1", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_breaks[0] = data.channel}
+		});
+		PS.audioLoad("break2", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_breaks[1] = data.channel}
+		});
+		PS.audioLoad("hit1", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_hits[0] = data.channel}
+		});
+		PS.audioLoad("hit2", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_hits[1] = data.channel}
+		});
+		PS.audioLoad("hit3", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_hits[2] = data.channel}
+		});
+		PS.audioLoad("level_complete", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_level_complete = data.channel}
+		});
+		PS.audioLoad("sad_face", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_sad_face = data.channel}
+		});
+		PS.audioLoad("reset", {
+			lock: true,
+			path: "audio/",
+			onLoad: function(data){audio_reset = data.channel}
+		})
+	}
+	
 	//this is called every tick
 	const update = function(){
 		//delete objects queued for deletion
@@ -572,7 +624,7 @@ const G = (function(){
 
 	return {
 		player, goal, walls, breakables,
-		loadLevel, processKeyDown, update
+		loadLevel, processKeyDown, update, loadAudio
 	}
 }())
 
@@ -588,6 +640,7 @@ Any value returned is ignored.
 
 PS.init = function( system, options ) {
 	// Load levels
+	G.loadAudio();
 	G.loadLevel(1);
 
 	PS.timerStart(4,G.update);
