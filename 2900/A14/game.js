@@ -42,21 +42,23 @@ If you don't use JSHint (or are using it with a configuration file), you can saf
 const G = (function(){
 	const levels = [
 		{
+			num: 0,
 			height: 8,
 			width: 8,
 			layout: 
 			[
-				[0,0,0,1,0,0,0,0],
-				[0,0,0,0,0,0,0,3],
-				[0,0,0,0,4,0,0,0],
-				[0,0,0,3,0,0,0,4],
+				[3,3,0,0,0,0,3,3],
+				[3,0,0,0,0,0,0,3],
+				[0,0,3,0,0,3,0,0],
 				[0,0,0,0,0,0,0,0],
-				[0,0,3,0,0,0,0,0],
-				[0,0,2,0,0,0,0,0],
-				[0,0,0,0,0,4,0,4]
+				[0,0,0,3,3,0,0,0],
+				[0,0,3,0,0,3,0,0],
+				[3,0,0,0,0,0,0,3],
+				[3,3,0,0,0,0,3,3]
 			]
 		},
 		{
+			num: 1,
 			height: 8,
 			width: 8,
 			layout:
@@ -72,6 +74,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 2,
 			height: 8,
 			width: 8,
 			layout:
@@ -87,6 +90,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 3,
 			height: 8,
 			width: 8,
 			layout:
@@ -102,6 +106,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 4,
 			height: 8,
 			width: 8,
 			layout:
@@ -117,6 +122,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 5,
 			height: 8,
 			width: 8,
 			layout:
@@ -132,6 +138,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 6,
 			height: 8,
 			width: 8,
 			layout:
@@ -147,6 +154,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 7,
 			height: 8,
 			width: 8,
 			layout:
@@ -162,6 +170,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 8,
 			height: 8,
 			width: 8,
 			layout:
@@ -177,6 +186,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 9,
 			height: 8,
 			width: 8,
 			layout:
@@ -184,7 +194,7 @@ const G = (function(){
 				[0,0,3,2,3,0,0,0],
 				[0,0,1,0,0,0,4,3],
 				[0,0,0,4,0,0,0,0],
-				[0,0,3,0,0,0,0,0],
+				[0,0,4,0,0,0,0,0],
 				[0,0,0,0,0,0,0,0],
 				[3,0,0,0,0,0,0,0],
 				[0,0,0,0,0,3,0,0],
@@ -192,21 +202,7 @@ const G = (function(){
 			]
 		},
 		{
-			height: 8,
-			width: 8,
-			layout:
-			[
-				[0,0,0,1,0,0,0,0],
-				[0,0,0,0,0,0,0,3],
-				[0,0,0,0,4,0,0,0],
-				[0,0,0,3,0,0,0,4],
-				[0,0,0,0,0,0,0,0],
-				[0,0,3,0,0,0,0,0],
-				[0,0,2,0,0,0,0,0],
-				[0,0,0,0,0,4,0,4]
-			]
-		},
-		{
+			num: 10,
 			height: 8,
 			width: 8,
 			layout:
@@ -222,6 +218,7 @@ const G = (function(){
 			]
 		},
 		{
+			num: 11,
 			height: 8,
 			width: 8,
 			layout: 
@@ -238,90 +235,69 @@ const G = (function(){
 		}
 	]
 	let curr_level = 1;
-	const level_max = levels.length-1;
+	const level_max = levels[levels.length-1].num;
 	let level_complete = false;
 
-	const ice_color = 0x555555;
-	const wall_color = 0xBED9ED;
-	const breakable_color = 0x7B90DB;
-	const player_color = 0x00DD99;
-	const goal_color = 0xffcc00;
-	const goal_secondary_color = 0xdd9900;
-	const grid_color = 0x333333;
-
-	const player_plane = 2;
-	const goal_plane = 1;
-	const wall_plane = 3;
-	const breakable_plane = 4;
+	const ice_color = 0xaaddff;
+	const ice_border = 0x77bbff;
+	const wall_color = 0x000000;
+	const breakable_color = 0xaa00aa;
+	const crate_color = 0x883300;
+	const player_color = 0xff8800;
+	const goal_color = 0x00ff00;
 
 	//the current player sprite
 	let player = {
 		direction: [0,0],
 		sprite: undefined,
-		//true if the player can break breakable walls, i.e. they have moved >=1 spaces
-		can_break: false,
+		attached: undefined,
 		//sets info about this player's sprite, including the given position
 		init: function(x,y){
 			this.sprite = PS.spriteSolid(1,1);
 			this.trySetDirection = this.trySetDirection.bind(this);
 			this.collide = this.collide.bind(this);
 			this.move = this.move.bind(this);
-			PS.spritePlane(this.sprite, player_plane);
+			this.attach = this.attach.bind(this);
+			this.detach = this.detach.bind(this);
+			PS.spritePlane(this.sprite, 4);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, player_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
 			PS.spriteCollide(this.sprite, this.collide);
 		},
-		//returns true if the direction was set, false otherwise
 		trySetDirection: function(x,y){
 			if(this.direction[0] === 0 && this.direction[1] === 0){
 				this.direction[0] = x;
 				this.direction[1] = y;
-				return true;
 			}
-			return false;
 		},
 		//called whenever this player collides with another sprite
 		collide: function(s1, p1, s2, p2, type){
 			if(type === PS.SPRITE_OVERLAP){
-				if(p1 === goal_plane || p2 === goal_plane){//collide with goal, level complete
+				if(s1 === goal.sprite || s2 === goal.sprite){ //level complete
 					this.direction[0] = 0;
 					this.direction[1] = 0;
 					level_complete = true;
 					//curr_level++;
 					//loadLevel(curr_level);
-				}else{//collide with wall
-					if(p1 === breakable_plane || p2 === breakable_plane){//collide with breakable
-						let breakable = undefined;
-						if(p1 === breakable_plane){
-							breakable = s1;
-						}else{
-							breakable = s2;
-						}
-						
-						if(this.can_break){
-							markDelete(breakable);
-							const to_delete = breakables.filter(ele => ele.sprite === breakable)[0];
-							breakables.splice(breakables.indexOf(to_delete), 1);
-						}
-
-						if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
-							if(breakables.length === 0){//all breakable blocks are gone
-								level_complete = true;//go to sad face screen
-							}
-						}
-					}
-
+				}else{ //hit wall
 					//move back before collision, then set direction to 0,0
 					PS.spriteMove(this.sprite,
 						PS.spriteMove(this.sprite).x-this.direction[0],
 						PS.spriteMove(this.sprite).y-this.direction[1]);
 					this.direction[0] = 0;
 					this.direction[1] = 0;
-					this.first_move = false;
-					this.can_break = false;
 				}
 			}
+		},
+		//attach to the given crate
+		attach: function(crate){
+			if(crate instanceof Crate && this.attached === undefined){
+				this.attached = crate;
+			}
+		},
+		detach: function(){
+			this.attached = undefined;
 		},
 		//call this every tick
 		move: function(){
@@ -338,13 +314,15 @@ const G = (function(){
 				return;
 			}
 			
-			PS.spriteMove(
-				this.sprite,
-				curr_x+this.direction[0],
+			PS
+			.spriteMove(
+				this.sprite, 
+				curr_x+this.direction[0], 
 				curr_y+this.direction[1]);
-			
-			if(!this.direction.every((val, i) => val === 0)){
-				this.can_break = true;
+			if(this.attached !== undefined){
+				PS.spriteMove(this.attached,
+					PS.spriteMove(this.attached).x+this.direction[0],
+					PS.spriteMove(this.attached).y+this.direction[1]);
 			}
 		}
 	};
@@ -355,14 +333,10 @@ const G = (function(){
 		//sets info about this goal's sprite, including the given position
 		init: function(x,y){
 			this.sprite = PS.spriteSolid(1,1);
-			PS.spritePlane(this.sprite, goal_plane);
+			PS.spritePlane(this.sprite, 3);
 			PS.spriteMove(this.sprite, x, y);
-			PS.glyph(x, y, 0x272a);
-			PS.glyphColor(x, y, goal_secondary_color);
 			PS.spriteSolidColor(this.sprite, goal_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
-			PS.border(x, y, 4);
-			PS.borderColor(x, y, goal_secondary_color);
 		},
 	};
 
@@ -371,7 +345,7 @@ const G = (function(){
 		constructor(x, y){
 			this.type = "Wall";
 			this.sprite = PS.spriteSolid(1, 1);
-			PS.spritePlane(this.sprite, wall_plane);
+			PS.spritePlane(this.sprite, 2);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, wall_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
@@ -385,27 +359,38 @@ const G = (function(){
 			this.type = "Breakable";
 			this.sprite = PS.spriteSolid(1, 1);
 			this.collide = this.collide.bind(this);
-			PS.spritePlane(this.sprite, breakable_plane);
+			PS.spritePlane(this.sprite, 2);
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, breakable_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
 			PS.spriteCollide(this.sprite, this.collide);
 		}
 		collide(s1, p1, s2, p2, type){
-			// if((type === PS.SPRITE_OVERLAP) && (s1 === player.sprite || s2 === player.sprite)){
-			// 	if(player.canBreak){//player has moved >=1 space
-			// 		markDelete(this.sprite);
-			// 		breakables.splice(breakables.indexOf(this), 1);
-			// 	}
-			// }
-			// if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
-			// 	if(breakables.length === 0){//all breakable blocks are gone
-			// 		level_complete = true;//go to sad face screen
-			// 	}
-			// }
+			if((type === PS.SPRITE_OVERLAP) && (s1 === player.sprite || s2 === player.sprite)){
+				markDelete(this.sprite);
+				breakables.splice(breakables.indexOf(this), 1);
+			}
+			if(goal.sprite === undefined){//this is the case only for the second to last map, i.e. the win screen
+				if(breakables.length === 0){//all breakable blocks are gone
+					level_complete = true;//go to sad face screen
+				}
+			}
 		}
 	};
 	let breakables = [];
+
+	//crate class
+	class Crate{
+		constructor(x, y){
+			this.type = "Crate";
+			this.sprite = PS.spriteSolid(1, 1);
+			PS.spritePlane(this.sprite, 2);
+			PS.spriteMove(this.sprite, x, y);
+			PS.spriteSolidColor(this.sprite, crate_color);
+			PS.spriteSolidAlpha(this.sprite, 255);
+		}
+	}
+	let crates = [];
 
 	/*
 	place a given type of block on the grid.
@@ -463,17 +448,22 @@ const G = (function(){
 		walls = [];
 		breakables.forEach(ele => PS.spriteDelete(ele.sprite));
 		breakables = [];
+		crates.forEach(ele => PS.spriteDelete(ele.sprite));
+		crates = [];
 
 		const level = levels[num];
 		
 		//set grid size
 		PS.gridSize(level.width, level.height);
-		PS.radius(PS.ALL, PS.ALL, 25);
-		PS.gridColor(grid_color);
-		PS.bgColor(PS.ALL, PS.ALL, ice_color);
-		PS.bgAlpha(PS.ALL, PS.ALL, 255);
-		PS.border(PS.ALL, PS.ALL, 0);
-		PS.alpha(PS.ALL, PS.ALL, 0);
+		
+		//set background colors
+		if(num !== level_max){//don't change bg color on sad face map
+			PS.gridPlane(0);
+			PS.color(PS.ALL, PS.ALL, ice_color);
+			PS.borderColor(PS.ALL, PS.ALL, ice_border);
+		}else{
+			PS.border(PS.ALL, PS.ALL, 0);
+		}
 		
 		//place obstacles, player, and goal
 		for(let row = 0; row < level.height; row++){
@@ -492,11 +482,34 @@ const G = (function(){
 				msg = "You win!"
 				break;
 			case level_max: //Sad face
-				msg = "You destroyed the happy...";
+				msg = "";
 				break;
 		}
 		PS.statusText(msg);
-		PS.statusColor(0xffffff);
+	}
+
+	const processKeyDown = function(key){
+		switch(key){
+			case PS.KEY_ARROW_UP:
+				player.trySetDirection(0,-1);
+				break;
+			case PS.KEY_ARROW_DOWN:
+				player.trySetDirection(0,1);
+				break;
+			case PS.KEY_ARROW_LEFT:
+				player.trySetDirection(-1,0);
+				break;
+			case PS.KEY_ARROW_RIGHT:
+				player.trySetDirection(1,0);
+				break;
+			case PS.KEY_SPACE:
+				//grab onto touching crate
+				break;
+			case 114://r to reset level
+				player.direction = [0,0];
+				loadLevel(curr_level);
+				break;
+		}
 	}
 
 	let delete_marks = [];
@@ -506,72 +519,19 @@ const G = (function(){
 		}
 	}
 
-	//returns true if the key press successfully changed the game state, false otherwise
-	const applyKey = function(key){
-		let success = false;
-		switch(key){
-			case PS.KEY_ARROW_UP:
-				success = player.trySetDirection(0,-1);
-				break;
-			case PS.KEY_ARROW_DOWN:
-				success = player.trySetDirection(0,1);
-				break;
-			case PS.KEY_ARROW_LEFT:
-				success = player.trySetDirection(-1,0);
-				break;
-			case PS.KEY_ARROW_RIGHT:
-				success = player.trySetDirection(1,0);
-				break;
-			case 114://r to reset level
-				player.direction = [0,0];
-				loadLevel(curr_level);
-				success = true;
-		}
-		return success;
-	}
-	
-	//buffer time
-	const buffer_time = 2;
-	//input buffer, only contains one key, value pair
-	let buffer = [];
-	
-	//tries to process a key down event, then adds the key press to the buffer if it was not successful
-	const processKeyDown = function(key){
-		let success = applyKey(key);
-		if(!success){
-			buffer[0] = key;
-			buffer[1] = buffer_time;
-		}
-	}
-
-	//this is called every tick
 	const update = function(){
-		//delete objects queued for deletion
 		delete_marks.forEach(ele => PS.spriteDelete(ele));
 		delete_marks = [];
-		//check if level is complete, load new level if it is
 		if(level_complete){
 			curr_level++;
 			loadLevel(curr_level);
 			level_complete = false;
 		}
-		//check for buffered input
-		if(buffer[0] !== undefined){
-			if(applyKey(buffer[0])){//input was successful, clear buffer
-				buffer = [];
-			}else{//input was not successful, reduce time left in buffer
-				buffer[1] -= 1;
-				if(buffer[1] === 0){//buffer time ran out, clear buffer
-					buffer = [];
-				}
-			}
-		}
-		//move the player
 		if(player.sprite !== undefined) player.move();
 	}
 
 	return {
-		player, goal, walls, breakables,
+		player, goal, walls, breakables, crates,
 		loadLevel, processKeyDown, update
 	}
 }())
@@ -693,6 +653,12 @@ This function doesn't have to do anything. Any value returned is ignored.
 */
 
 PS.keyDown = function( key, shift, ctrl, options ) {
+	// Uncomment the following code line to inspect first three parameters:
+
+	// PS.debug( "PS.keyDown(): key=" + key + ", shift=" + shift + ", ctrl=" + ctrl + "\n" );
+
+	// Add code here for when a key is pressed.
+
 	G.processKeyDown(key);
 };
 
