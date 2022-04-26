@@ -836,6 +836,7 @@ const G = (function(){
 			this.pickup = function(){
 				obj.pickup();
 				player.egg_count++;
+				PS.audioPlay("fx_coin2");
 			}
 
 			egg_ids[this.sprite] = this;
