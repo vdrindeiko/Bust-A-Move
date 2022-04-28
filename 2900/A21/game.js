@@ -40,15 +40,16 @@ If you don't use JSHint (or are using it with a configuration file), you can saf
 
 const G = (function(){
 	// ------ Constants ------
-	const floor_plane = 0;
-	const wall_plane = 1;
-	const door_plane = 2;
-	const egg_plane = 3;
-	const locked_door_plane = 4;
-	const player_plane = 5;
+	const ground_plane = 0;
+	const floor_plane = 1;
+	const wall_plane = 2;
+	const door_plane = 3;
+	const egg_plane = 4;
+	const locked_door_plane = 5;
+	const player_plane = 6;
 
 	const player_color = 0xA1C93A;
-	const wall_color = 0x000000;
+	const wall_color = 0x303030;
 	const ground_color_default = 0xFFFFFF;
 	let ground_color_curr = ground_color_default;
 	const slippy_color = 0x77eeff;
@@ -68,7 +69,7 @@ const G = (function(){
 				[1,0,0,0,1],
 				[1,0,0,0,1],
 				[1,0,0,0,1],
-				[1,1,3,1,1],
+				[1,1,3,1,1]
 			],
 			key: {
 				'0': {type: null},
@@ -129,6 +130,7 @@ const G = (function(){
 				'2': {
 					type: 'egg', 
 					color: PS.COLOR_MAGENTA, 
+					border_color: 0xeeee00,
 					pickup: function(){
 						printStatus("It doesn't have the key in it, though.");
 						rooms.easter_egg.key[2].picked_up = true;
@@ -162,6 +164,7 @@ const G = (function(){
 				'2': {
 					type: 'egg', 
 					color: PS.COLOR_VIOLET, 
+					border_color: 0xffdf00,
 					pickup: function(){
 						printStatus("Hmmm... Nope, that's a wester egg.");
 						rooms.wester_egg.key[2].picked_up = true;
@@ -248,7 +251,7 @@ const G = (function(){
 				'4': {type: 'floor', color: 0x6A98BA, onWalked: function(){
 						PS.audioPlay("l_hchord_d4");
 					}},
-				'5': {type: 'floor', color: 0xFFFFFF, onWalked: function(){
+				'5': {type: 'floor', color: 0x373737, onWalked: function(){
 						player.allow_movement = false;
 						PS.audioPlay("fx_click");
 						waitTicks(30, rooms.perlenspiel.playPerlenspiel);
@@ -335,7 +338,8 @@ const G = (function(){
 			},
 			reward_egg: {
 				type: 'egg', 
-				color: PS.COLOR_CYAN, 
+				color: 0x0088dd,
+				border_color: 0x9d00dd,
 				pickup: function(){
 					rooms.perlenspiel.room_complete = true;
 					rooms.perlenspiel.key['5'] = {type: 'floor', color: 0xA1C93A, onWalked: function(){
@@ -363,7 +367,7 @@ const G = (function(){
 				'0': {type: null},
 				'1': {type: 'wall'},
 				'3': {type: 'door', dir: {x:0,y:-1}, goto: 'slippy'},
-				'4': {type: 'egg', color: 0xffcc00, pickup: function(){
+				'4': {type: 'egg', color: 0xffcc00, border_color: 0xdd9900, pickup: function(){
 					printStatus("You found the key!");
 					rooms.proto_win_room.key[4].picked_up = true;
 					player.has_key = true;
@@ -419,9 +423,43 @@ const G = (function(){
 
 	//called on game startup
 	const init = function(){
+		groundInit();
 		loadRoom('start');
 		PS.timerStart(2, G.update);
 	};
+
+	const groundInit = function(){
+		rooms.start.ground = [
+			[0x303030,0x303030,0x4b4b4b,0x303030,0x303030],
+			[0x303030,0x605850,0x605850,0x605850,0x303030],
+			[0x303030,0x605850,0x666358,0x605850,0x303030],
+			[0x303030,0x6a6b5e,0x6d7062,0x6a6b5e,0x303030],
+			[0x333736,0x747b6b,0x7a8673,0x747b6b,0x333736],
+			[0x383f3c,0x82947e,0x8da88d,0x82947e,0x383f3c],
+			[0x3c4743,0x3f4e49,0x95b799,0x3f4e49,0x3c4743]
+		];
+		rooms.room1.colors = [0xb5e1ca, 0xb4dac6, 0x90d4af, 0xa4d0b8];
+		rooms.wester_egg.colors = [0xa697cf, 0xb2a9cd, 0xcfc4e8, 0xc0b7d7];
+		rooms.easter_egg.colors = [0xf3c0e3, 0xe1b4d4, 0xd894c5, 0xd7a6ca];
+		rooms.big_room.colors = [0xf6cbc0, 0xe4bdb4, 0xdca295, 0xdbafa7];
+		rooms.perlenspiel.colors = [0x393939, 0x3d3d3d, 0x373737, 0x3b3b3b];
+		rooms.slippy.colors = [0xafe4ef, 0xa1dae4, 0x8fd6e3, 0xbcf2ff];
+		rooms.proto_win_room.colors = [0xd8d6a1, 0xeae9b2, 0xdbd88d, 0xe2e1b1];
+
+		for(let room of Object.getOwnPropertyNames(rooms)){
+			if(room === 'start') continue; //this room is manually generated
+			//create array
+			rooms[room].ground = new Array(rooms[room].size.y);
+			for(let i = 0; i < rooms[room].size.y; i++){
+				rooms[room].ground[i] = new Array(rooms[room].size.x);
+			}
+			for(let x = 0; x < rooms[room].size.x; x++){
+				for(let y = 0; y < rooms[room].size.y; y++){
+					rooms[room].ground[y][x] = rooms[room].colors[PS.random(4)-1];
+				}
+			}
+		}
+	}
 
 	//called whenever a new room is loaded. initializes a new grid with predefined formatting
 	const gridInit = function(width, height){
@@ -547,7 +585,12 @@ const G = (function(){
 		//place objects
 		for(let y = 0; y < room.size.y; y++){
 			for(let x = 0; x < room.size.x; x++){
-				//PS.debug("Place " + x + ", " + y + ", " + room.layout[y][x] + "\n");
+				//ground color
+				const curr_plane = PS.gridPlane();
+				PS.gridPlane(0);
+				PS.color(x, y, room.ground[y][x]);
+				PS.gridPlane(curr_plane);
+
 				const obj = room.key[room.layout[y][x]];
 
 				//skip over placing the player object if not the first room loaded
@@ -574,9 +617,6 @@ const G = (function(){
 
 	const place = function(obj, x, y){
 		switch(obj.type){
-			case null:
-				PS.color(x,y,ground_color_curr);
-				break;
 			case 'player':
 				player.init(x,y);
 				break;
@@ -832,9 +872,12 @@ const G = (function(){
 			PS.spriteMove(this.sprite, x, y);
 			PS.spriteSolidColor(this.sprite, obj.color);
 			PS.spriteSolidAlpha(this.sprite, 255);
+			PS.border(x,y,4);
+			PS.borderColor(x,y,obj.border_color);
 
 			this.pickup = function(){
 				obj.pickup();
+				PS.border(x,y,0);
 				player.egg_count++;
 				PS.audioPlay("fx_coin2");
 			}
