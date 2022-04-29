@@ -81,7 +81,7 @@ const G = (function(){
 				'4': {type: 'locked_door'}
 			},
 			onEnter: function(){
-				if(!player.has_key) printStatus("You're now locked in here. Excellent work.");
+				if(!player.has_key) printStatus("You're now locked in here. Good work.");
 				else printStatus("Unlock the door... or maybe explore more?")
 			},
 			onExit: function(){
