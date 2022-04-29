@@ -132,7 +132,7 @@ const G = (function(){
 					color: PS.COLOR_MAGENTA, 
 					border_color: 0xeeee00,
 					pickup: function(){
-						printStatus("It doesn't have the key in it, though.");
+						printStatus("It's empty... Got egg-cited for nothing.");
 						rooms.easter_egg.key[2].picked_up = true;
 					},
 					picked_up: false
@@ -438,13 +438,13 @@ const G = (function(){
 			[0x383f3c,0x82947e,0x8da88d,0x82947e,0x383f3c],
 			[0x3c4743,0x3f4e49,0x95b799,0x3f4e49,0x3c4743]
 		];
-		rooms.room1.colors = [0xb5e1ca, 0xb4dac6, 0x90d4af, 0xa4d0b8];
-		rooms.wester_egg.colors = [0xa697cf, 0xb2a9cd, 0xcfc4e8, 0xc0b7d7];
-		rooms.easter_egg.colors = [0xf3c0e3, 0xe1b4d4, 0xd894c5, 0xd7a6ca];
-		rooms.big_room.colors = [0xf6cbc0, 0xe4bdb4, 0xdca295, 0xdbafa7];
-		rooms.perlenspiel.colors = [0x393939, 0x3d3d3d, 0x373737, 0x3b3b3b];
-		rooms.slippy.colors = [0xafe4ef, 0xa1dae4, 0x8fd6e3, 0xbcf2ff];
-		rooms.proto_win_room.colors = [0xd8d6a1, 0xeae9b2, 0xdbd88d, 0xe2e1b1];
+		rooms.room1.colors = [0xb5e1ca, 0xb4dac6, 0x90d4af, 0xa4d0b8, 0xa2deb4, 0xafd4ba];
+		rooms.wester_egg.colors = [0xa697cf, 0xb2a9cd, 0xcfc4e8, 0xc0b7d7, 0xc1b3e5, 0xbdaeeb];
+		rooms.easter_egg.colors = [0xf3c0e3, 0xe1b4d4, 0xd894c5, 0xd7a6ca, 0xe9b7da, 0xe29fcf];
+		rooms.big_room.colors = [0xf6cbc0, 0xe4bdb4, 0xdca295, 0xdbafa7, 0xebbcb0, 0xdeada1];
+		rooms.perlenspiel.colors = [0x393939, 0x3d3d3d, 0x373737, 0x3b3b3b, 0x353535, 0x3f3f3f];
+		rooms.slippy.colors = [0xafe4ef, 0xa1dae4, 0x8fd6e3, 0xbcf2ff, 0x9adce9, 0xb8eaf6];
+		rooms.proto_win_room.colors = [0xd8d6a1, 0xeae9b2, 0xdbd88d, 0xe2e1b1, 0xe4e18b, 0xe2df9e];
 
 		for(let room of Object.getOwnPropertyNames(rooms)){
 			if(room === 'start') continue; //this room is manually generated
@@ -455,7 +455,7 @@ const G = (function(){
 			}
 			for(let x = 0; x < rooms[room].size.x; x++){
 				for(let y = 0; y < rooms[room].size.y; y++){
-					rooms[room].ground[y][x] = rooms[room].colors[PS.random(4)-1];
+					rooms[room].ground[y][x] = rooms[room].colors[PS.random(6)-1];
 				}
 			}
 		}
@@ -685,6 +685,7 @@ const G = (function(){
 			PS.spriteSolidColor(this.sprite, player_color);
 			PS.spriteSolidAlpha(this.sprite, 255);
 			PS.spriteCollide(this.sprite, this.collide);
+
 		},
 		collide: function(s1, p1, s2, p2, type){
 			if(type === PS.SPRITE_OVERLAP){
