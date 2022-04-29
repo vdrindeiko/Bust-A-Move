@@ -57,6 +57,8 @@ const G = (function(){
 
 	const easter_egg_count = 3;
 
+	const perlenspiel_notes = {};
+
 	// ------ Rooms ------
 
 	const rooms = {
@@ -246,10 +248,10 @@ const G = (function(){
 				'1': {type: 'wall'},
 				'2': {type: 'door', dir: {x:-1,y:0}, goto: 'big_room'},
 				'3': {type: 'floor', color: 0x87578E, onWalked: function(){
-						PS.audioPlay("l_hchord_db4");
+						PS.audioPlayChannel(perlenspiel_notes["l_hchord_db4"]);
 					}},
 				'4': {type: 'floor', color: 0x6A98BA, onWalked: function(){
-						PS.audioPlay("l_hchord_d4");
+						PS.audioPlayChannel(perlenspiel_notes["l_hchord_d4"]);
 					}},
 				'5': {type: 'floor', color: 0x373737, onWalked: function(){
 						player.allow_movement = false;
@@ -259,10 +261,10 @@ const G = (function(){
 					allow_collision: false
 				},
 				'6': {type: 'floor', color: 0xF4782B, onWalked: function(){
-						PS.audioPlay("l_hchord_f4");
+						PS.audioPlayChannel(perlenspiel_notes["l_hchord_f4"]);
 					}},
 				'7': {type: 'floor', color: 0xEFEB42, onWalked: function(){
-						PS.audioPlay("l_hchord_a4");
+						PS.audioPlayChannel(perlenspiel_notes["l_hchord_a4"]);
 					}}
 			},
 			onEnter: function(){
@@ -279,14 +281,16 @@ const G = (function(){
 					if(rooms.perlenspiel.playPerlenspiel.playNote.index === undefined){//uninitialized
 						rooms.perlenspiel.playPerlenspiel.playNote.index = 0;
 						rooms.perlenspiel.playPerlenspiel.playNote.melody = 
-						["l_hchord_d4", "", "l_hchord_a4", "", "l_hchord_f4", "", "l_hchord_d4", 
-						"", "l_hchord_db4", "", "hchord_d4", "hchord_e4", "l_hchord_f4"];
+						[perlenspiel_notes["l_hchord_d4"], "", perlenspiel_notes["l_hchord_a4"], "",
+						perlenspiel_notes["l_hchord_f4"], "", perlenspiel_notes["l_hchord_d4"], 
+						"", perlenspiel_notes["l_hchord_db4"], "", perlenspiel_notes["hchord_d4"], 
+						perlenspiel_notes["hchord_e4"], perlenspiel_notes["l_hchord_f4"]];
 					}
 					
 					//play note
 					const melody = rooms.perlenspiel.playPerlenspiel.playNote.melody;
 					let index = rooms.perlenspiel.playPerlenspiel.playNote.index;
-					PS.audioPlay(melody[index]);
+					PS.audioPlayChannel(melody[index]);
 					
 					//flash tile
 					if(melody[index] !== ""){
@@ -425,9 +429,23 @@ const G = (function(){
 	//called on game startup
 	const init = function(){
 		groundInit();
+		loadPerlenspielSounds();
 		loadRoom('start');
 		PS.timerStart(2, G.update);
 	};
+
+	const loadPerlenspielSounds = function(){
+		const sounds = ["l_hchord_db4", "l_hchord_d4", "l_hchord_f4", "l_hchord_a4",
+						"hchord_d4", "hchord_e4"];
+		for(let i = 0; i < sounds.length; i++){
+			PS.audioLoad(sounds[i], {
+				lock: true,
+				onLoad: function(data){
+					perlenspiel_notes[sounds[i]] = data.channel;
+				}
+			})
+		}
+	}
 
 	const groundInit = function(){
 		rooms.start.ground = [
