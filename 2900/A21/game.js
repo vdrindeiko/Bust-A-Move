@@ -53,7 +53,7 @@ const G = (function(){
 	const ground_color_default = 0xFFFFFF;
 	let ground_color_curr = ground_color_default;
 	const slippy_color = 0x77eeff;
-	const locked_door_color = 0x333333;
+	const locked_door_color = 0x555555;
 
 	const easter_egg_count = 3;
 
@@ -132,7 +132,7 @@ const G = (function(){
 					color: PS.COLOR_MAGENTA, 
 					border_color: 0xeeee00,
 					pickup: function(){
-						printStatus("It doesn't have the key in it, though.");
+						printStatus("Empty. Got egg-cited for nothing.");
 						rooms.easter_egg.key[2].picked_up = true;
 					},
 					picked_up: false
@@ -342,9 +342,10 @@ const G = (function(){
 				border_color: 0x9d00dd,
 				pickup: function(){
 					rooms.perlenspiel.room_complete = true;
-					rooms.perlenspiel.key['5'] = {type: 'floor', color: 0xA1C93A, onWalked: function(){
-						PS.audioPlay("l_hchord_e4");
-					}};
+					// rooms.perlenspiel.key['5'] = {type: 'floor', color: 0xA1C93A, onWalked: function(){
+					// 	PS.audioPlay("l_hchord_e4");
+					// }};
+					printStatus("Nope. No key here.");
 				},
 				picked_up: false
 			},
@@ -368,7 +369,7 @@ const G = (function(){
 				'1': {type: 'wall'},
 				'3': {type: 'door', dir: {x:0,y:-1}, goto: 'slippy'},
 				'4': {type: 'egg', color: 0xffcc00, border_color: 0xdd9900, pickup: function(){
-					printStatus("You found the key!");
+					printStatus("You found the key! Egg-cellent!");
 					rooms.proto_win_room.key[4].picked_up = true;
 					player.has_key = true;
 				}, picked_up: false}
@@ -430,7 +431,7 @@ const G = (function(){
 
 	const groundInit = function(){
 		rooms.start.ground = [
-			[0x303030,0x303030,0x4b4b4b,0x303030,0x303030],
+			[0x303030,0x303030,0x777470,0x303030,0x303030],
 			[0x303030,0x605850,0x605850,0x605850,0x303030],
 			[0x303030,0x605850,0x666358,0x605850,0x303030],
 			[0x303030,0x6a6b5e,0x6d7062,0x6a6b5e,0x303030],
